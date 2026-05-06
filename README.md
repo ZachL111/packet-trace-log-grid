@@ -1,68 +1,40 @@
 # packet-trace-log-grid
 
-`packet-trace-log-grid` treats observability as a local verification problem. The Scala implementation is intentionally narrow, but the fixtures and notes make the behavior explicit.
+`packet-trace-log-grid` is a compact Scala repository for observability, centered on this goal: Package a Scala local lab for log analysis with transition tables, invalid-transition tests, and documented operating limits.
 
-## Packet Trace Log Grid Checkpoints
+## Reason For The Project
 
-Treat the compact fixture as the contract and the extended examples as a scratchpad. The code should stay boring enough that a change in behavior is obvious from the test output.
+This is intentionally local and self-contained so it can be inspected without credentials, services, or seeded history.
 
-## What This Is For
+## Packet Trace Log Grid Review Notes
 
-The repository exists to keep a technical idea small enough to reason about. The implementation avoids external dependencies where possible, then uses fixtures to make changes easy to review.
+The first comparison I would make is `signal loss` against `latency skew` because it shows where the rule is most opinionated.
 
-## Architecture Notes
+## What It Does
 
-The design is intentionally direct: parse or construct a signal, score it, classify it, and verify the expected branch. This makes the repository useful for studying observability behavior without needing a service or database unless the language project itself is SQL. The Scala code uses case classes and a compact object API to keep the test path direct.
+- `fixtures/domain_review.csv` adds cases for span volume and latency skew.
+- `metadata/domain-review.json` records the same cases in structured form.
+- `config/review-profile.json` captures the read order and the two review questions.
+- `examples/packet-trace-log-walkthrough.md` walks through the case spread.
+- The Scala code includes a review path for `signal loss` and `latency skew`.
+- `docs/field-notes.md` explains the strongest and weakest cases.
 
-## Case Study
+## How It Is Put Together
 
-`pressure` is the first example I would inspect because it lands on the `review` path with a score of 56. The broader file also keeps `degraded` at -7 and `surge` at 198, which gives the model a useful low-to-high spread.
+The implementation keeps the scoring rule plain: reward signal and confidence, preserve slack, penalize drag, then classify the result into a review lane.
 
-## Useful Pieces
+The Scala addition stays small enough to inspect in one sitting.
 
-- Uses fixture data to keep log shape changes visible in code review.
-- Includes extended examples for latency summaries, including `surge` and `degraded`.
-- Documents incident slices tradeoffs in `docs/operations.md`.
-- Runs locally with a single verification command and no external credentials.
-- Stores project constants and verification metadata in `metadata/project.json`.
-
-## Tooling
-
-The only required setup is the local Scala toolchain. After cloning, stay in the repo root so fixture paths resolve correctly.
-
-## Quality Gate
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/audit.ps1
-```
-
-The audit command checks repository structure and README constraints before it delegates to the verifier.
-
-## Project Layout
-
-- `src`: primary implementation
-- `tests`: verification harness
-- `fixtures`: compact golden scenarios
-- `examples`: expanded scenario set
-- `metadata`: project constants and verification metadata
-- `docs`: operations and extension notes
-- `scripts`: local verification and audit commands
-
-## Scope
-
-The examples cover useful edges, not every edge. A larger version would add malformed-input tests, richer reports, and deeper domain parsers.
-
-## Expansion Ideas
-
-- Add a loader for `examples/extended_cases.csv` and promote selected cases into the language test suite.
-- Add a short report command that prints the score breakdown for a single scenario.
-- Add malformed input fixtures so the failure path is as visible as the happy path.
-- Add one more observability fixture that focuses on a malformed or borderline input.
-
-## Local Workflow
+## Run It
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 ```
 
-This runs the language-level build or test path against the compact fixture set.
+## Check It
+
+The verifier is intentionally local. It should fail if the fixture score math, lane assignment, or language-specific test drifts.
+
+## Boundaries
+
+The repository is intentionally scoped to local checks. I would expand it by adding adversarial fixtures before adding features.
